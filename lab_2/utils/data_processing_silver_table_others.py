@@ -32,14 +32,14 @@ def process_silver_table(snapshot_date_str, bronze_directory, feature, silver_di
     df = df.dropDuplicates()
 
     # Remove rows missing critical fields
-    df = df.dropna(subset=["snapshot_date", "Annual_Income"])
+    df = df.dropna(subset=["snapshot_date", "Monthly_Inhand_Salary"])
     
     # Assemble the numeric feature into a vector
-    assembler = VectorAssembler(inputCols=["annual_income"], outputCol="annual_income_vec")
+    assembler = VectorAssembler(inputCols=["Monthly_Inhand_Salary"], outputCol="monthly_inhand_salary_vec")
     df = assembler.transform(df)
 
     # Apply standard scaling
-    scaler = StandardScaler(inputCol="annual_income_vec", outputCol="annual_income_scaled", withMean=True, withStd=True)
+    scaler = StandardScaler(inputCol="monthly_inhand_salary_vec", outputCol="monthly_inhand_salary_vec_scaled", withMean=True, withStd=True)
     scaler_model = scaler.fit(df)
     df = scaler_model.transform(df)
 
