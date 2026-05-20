@@ -19,11 +19,11 @@ from pyspark.ml.feature import VectorAssembler, StandardScaler
 from pyspark.ml import Pipeline
 from pyspark.ml.feature import StringIndexer, OneHotEncoder
 
-def process_silver_table(snapshot_date_str, bronze_directory, feature, silver_directory, spark):
 
+def process_silver_table(snapshot_date_str, bronze_directory, feature, silver_directory, spark):
     # prepare arguments
     snapshot_date = datetime.strptime(snapshot_date_str, "%Y-%m-%d")
-    
+
     # connect to bronze table
     partition_name = "bronze_feature_" + feature + "_" + snapshot_date_str.replace('-','_') + '.csv'
     filepath = bronze_directory + partition_name
@@ -39,6 +39,15 @@ def process_silver_table(snapshot_date_str, bronze_directory, feature, silver_di
 
     # Convert age from string to float
     df = df.withColumn("age", regexp_extract(col("age"), r"([0-9]+(?:\.[0-9]+)?)", 1).cast("double"))
+
+    # One-hot encode
+    indexer = StringIndexer(inputCol="Occupation", outputCol="occupation_index", handleInvalid="keep")
+
+    encoder = OneHotEncoder(inputCols=["occupation_index"], outputCols=["occupation_ohe"], dropLast=False)
+
+    pipeline = Pipeline(stages=[indexer, encoder])
+    df_encoded = pipeline.fit(df).transform(df)
+    df_encoded.select("occupation", "occupation_index", "occupation_ohe").show(20, truncate=False)
 
     # save silver table - IRL connect to database to write
     partition_name = feature + snapshot_date_str.replace('-','_') + '.parquet'
