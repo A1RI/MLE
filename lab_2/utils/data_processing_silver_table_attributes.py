@@ -44,9 +44,9 @@ def process_silver_table(snapshot_date_str, bronze_directory, feature, silver_di
     if "Age" in df.columns:
         # regexp_replace(col, pattern, replacement)
         # '\\D' matches any character that is not a decimal digit
-        return df.withColumn("Age", regexp_replace(col("Age"), "\\D", "").cast("int"))
+        df.withColumn("Age", regexp_replace(col("Age"), "\\D", "").cast("int"))
     elif "age" in df.columns:
-        return df.withColumn("age", regexp_replace(col("age"), "\\D", "").cast("int"))
+        df.withColumn("age", regexp_replace(col("age"), "\\D", "").cast("int"))
 
     # save silver table - IRL connect to database to write
     partition_name = feature + snapshot_date_str.replace('-','_') + '.parquet'
