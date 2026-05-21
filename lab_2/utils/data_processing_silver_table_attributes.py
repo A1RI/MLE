@@ -14,10 +14,11 @@ import argparse
 from pyspark.sql.functions import col
 from pyspark.sql.types import StringType, IntegerType, FloatType, DateType
 
-from pyspark.sql.functions import regexp_extract, when
+from pyspark.sql.functions import regexp_extract, regexp_replace, when
 from pyspark.ml.feature import VectorAssembler, StandardScaler 
 from pyspark.ml import Pipeline
 from pyspark.ml.feature import StringIndexer, OneHotEncoder
+
 
 def process_silver_table(snapshot_date_str, bronze_directory, feature, silver_directory, spark):
 
@@ -39,6 +40,13 @@ def process_silver_table(snapshot_date_str, bronze_directory, feature, silver_di
 
     # Convert age from string to float
     df = df.withColumn("age", regexp_extract(col("age"), r"([0-9]+(?:\.[0-9]+)?)", 1).cast("double"))
+
+    if "Age" in df.columns:
+        # regexp_replace(col, pattern, replacement)
+        # '\\D' matches any character that is not a decimal digit
+        return df.withColumn("Age", regexp_replace(col("Age"), "\\D", "").cast("int"))
+    elif "age" in df.columns:
+        return df.withColumn("age", regexp_replace(col("age"), "\\D", "").cast("int"))
 
     # save silver table - IRL connect to database to write
     partition_name = feature + snapshot_date_str.replace('-','_') + '.parquet'
